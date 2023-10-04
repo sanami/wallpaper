@@ -1,19 +1,59 @@
 defmodule Wallpaper do
-  alias Vix.Vips.{Image, Operation}
   require Logger
 
+  alias Vix.Vips.{Image, Operation}
+
+  @min_size 100_000
+  @workers 8
   @width 1920
   @height 1080
   @offset 30
 
+  def find_files(search_dir) do
+    Enum.reduce Path.wildcard("#{search_dir}/**/*.jpg"), [], fn path, list ->
+      st = File.stat!(path)
+      if st.type == :regular && st.size > @min_size do
+        [{st.size, path} | list]
+      else
+        list
+      end
+    end
+  end
+
+  def group_files(files) do
+    files
+    |> Enum.sort(&( elem(&1, 0) > elem(&2, 0)))
+    |> Stream.with_index
+    |> Enum.reduce(%{}, fn {{_size, path}, i}, file_groups ->
+      key = rem(i, @workers)
+      Map.update file_groups, key, [path], fn list -> [path | list] end
+    end)
+  end
+
+  def run(search_dir, result_dir) do
+    search_dir
+    |> find_files()
+    |> group_files()
+    |> Enum.map(fn {_group, files} -> Task.async(Wallpaper, :process_files, [search_dir, result_dir, files]) end)
+    |> Enum.map(&Task.await(&1, :infinity))
+  end
+
+  def process_files(search_dir, result_dir, files) do
+    Logger.info "process_files #{length files}"
+    for file_path <- files do
+      try do
+        result_path = Path.join(result_dir, Path.relative_to(file_path, search_dir))
+        process_file(file_path, result_path)
+      rescue ex ->
+        Logger.error ex
+      end
+    end
+  end
+
   def process_file(file_path, result_path) do
-    Logger.info "process_file #{file_path} -> #{result_path}"
+    Logger.debug "process_file #{file_path} -> #{result_path}"
 
     {:ok, img} = Image.new_from_file(file_path)
-    dbg(img)
-    w = Image.width(img)
-    h = Image.height(img)
-    IO.puts("Width: #{w} Height: #{h}")
 
     scale = (@height - @offset) / Image.height(img)
     {:ok, img} = Operation.resize(img, scale)
@@ -24,18 +64,7 @@ defmodule Wallpaper do
         background: [0]
       )
 
-    IO.puts("Width: #{Image.width(img)} Height: #{Image.height(img)}")
     File.mkdir_p(Path.dirname(result_path))
     :ok = Image.write_to_file(img, result_path)
   end
-
-  def run(search_dir, result_dir) do
-    Enum.each Path.wildcard("#{search_dir}/**/*"), fn path ->
-      unless File.dir?(path) do
-        result_path = Path.join(result_dir, Path.relative_to(path, search_dir))
-        process_file path, result_path
-      end
-    end
-  end
-
 end
