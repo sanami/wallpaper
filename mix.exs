@@ -21,7 +21,8 @@ defmodule Wallpaper.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:vix, "~> 0.22"}
+      {:vix, "~> 0.22"},
+      {:poolboy, "~> 1.5"}
     ]
   end
 end

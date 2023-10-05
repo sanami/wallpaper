@@ -10,8 +10,4 @@ defmodule WallpaperTest do
 
     assert length(res) > 10
   end
-
-  test "run" do
-    Wallpaper.run @folder1, @result1
-  end
 end

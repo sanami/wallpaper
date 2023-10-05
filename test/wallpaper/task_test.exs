@@ -6,7 +6,7 @@ defmodule Wallpaper.TaskTest do
   @result1 "priv/result"
 
   test "group_files" do
-    res = Task.find_files(@folder1) |> Task.group_files
+    res = Wallpaper.find_files(@folder1) |> Task.group_files
     dbg res
 
     assert length(res[0]) > 2

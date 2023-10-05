@@ -37,5 +37,6 @@ defmodule Wallpaper do
     :ok = Image.write_to_file(img, result_path)
   end
 
-  defdelegate run(search_dir, result_dir), to: Wallpaper.Task
+  # defdelegate run(search_dir, result_dir), to: Wallpaper.Task
+  defdelegate run(search_dir, result_dir), to: Wallpaper.Pool
 end
