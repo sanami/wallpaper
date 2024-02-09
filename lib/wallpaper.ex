@@ -3,7 +3,7 @@ defmodule Wallpaper do
 
   alias Vix.Vips.{Image, Operation}
 
-  @width 1920
+  # @width 1920
   @height 1080
   @offset 30
   @min_size 100_000

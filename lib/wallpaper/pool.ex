@@ -25,8 +25,20 @@ defmodule Wallpaper.Pool do
       GenServer.cast(worker_pid, {:process, file_path, result_path})
     end)
 
-    #TODO wait
-    
-    Supervisor.stop(super_pid, :normal)
+    wait_workers(:image_workers_pool)
+
+    Supervisor.stop(super_pid, :normal, :infinity)
+  end
+
+  def wait_workers(pool_id) do
+    wait_workers(pool_id, :poolboy.status(pool_id))
+  end
+
+  def wait_workers(_pool_id, {_, _, 0, 0}), do: :ok
+
+  def wait_workers(pool_id, pool_status = {_, _, _, _}) do
+    Logger.debug "#{pool_id} #{inspect pool_status}"
+    Process.sleep(100)
+    wait_workers(pool_id, :poolboy.status(pool_id))
   end
 end

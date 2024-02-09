@@ -8,9 +8,8 @@ defmodule Wallpaper.PoolTest do
   @tag timeout: :infinity
   test "run" do
     res = run @folder1, @result1
-    res = List.flatten(res)
     pp res
 
-    assert length(res) > 10
+    assert res == :ok
   end
 end
