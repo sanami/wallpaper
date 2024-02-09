@@ -9,14 +9,17 @@ defmodule Wallpaper do
   @min_size 100_000
 
   def find_files(search_dir) do
-    Enum.reduce Path.wildcard("#{search_dir}/**/*.jpg"), [], fn path, list ->
+    search_dir
+    |> Path.join("**/*.jpg")
+    |> Path.wildcard()
+    |> Enum.reduce([], fn path, list ->
       st = File.stat!(path)
       if st.type == :regular && st.size > @min_size do
         [{st.size, path} | list]
       else
         list
       end
-    end
+    end)
   end
 
   def process_file(file_path, result_path) do

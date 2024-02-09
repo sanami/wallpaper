@@ -10,10 +10,12 @@ defmodule Wallpaper.Worker do
     {:ok, nil}
   end
 
-  def handle_call({:process, file_path, result_path}, _from, state) do
+  def handle_cast({:process, file_path, result_path}, state) do
     # Logger.debug "Wallpaper.Worker.process #{file_path}"
     Wallpaper.process_file(file_path, result_path)
 
-    {:reply, result_path, state}
+    :poolboy.checkin(:image_workers_pool, self())
+
+    {:noreply, state}
   end
 end
